@@ -97,6 +97,15 @@ app.post("/api/items", async (req, res) => {
   }
 });
 
+//12
+app.get("/version", (req, res) => {
+  res.json({
+    version: "1.1",
+    updatedAt: "2026-01-25"
+  });
+});
+
+
 // PUT /api/items/:id
 app.put("/api/items/:id", async (req, res) => {
   const { id } = req.params;
