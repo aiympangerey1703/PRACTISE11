@@ -147,12 +147,16 @@ app.patch("/api/items/:id", async (req, res) => {
 
     const update = {};
     if (name !== undefined) {
-      if (typeof name !== "string") return res.status(400).json({ error: "name must be string" });
+      if (typeof name !== "string") return res.status(400).json({ error: "'name' must be string" });
       update.name = name.trim();
     }
     if (description !== undefined) {
-      if (typeof description !== "string") return res.status(400).json({ error: "description must be string" });
+      if (typeof description !== "string") return res.status(400).json({ error: "'description' must be string" });
       update.description = description.trim();
+    }
+
+    if (Object.keys(update).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
     }
 
     const result = await items.findOneAndUpdate(
@@ -168,6 +172,7 @@ app.patch("/api/items/:id", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // DELETE /api/items/:id
 app.delete("/api/items/:id", async (req, res) => {
