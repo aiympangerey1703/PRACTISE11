@@ -11,11 +11,13 @@ app.use(express.json());
 const checkToken = (req, res, next) => {
   const token = req.headers['authorization'];  // Получаем токен из заголовка
 
+  const MY_SECRET_TOKEN = process.env.MY_SECRET_TOKEN || 'my-secret-token';  // Получаем токен из окружения
+
   if (!token) {
     return res.status(401).json({ error: 'Токен не предоставлен' });  // Если токен отсутствует, возвращаем 401
   }
 
-  if (token !== 'my-secret-token') {  // Проверяем, совпадает ли токен с нужным значением
+  if (token !== MY_SECRET_TOKEN) {  // Проверяем, совпадает ли токен с нужным значением
     return res.status(403).json({ error: 'Forbidden: Неверный токен' });  // Если токен неверный, возвращаем 403
   }
 
@@ -61,7 +63,12 @@ app.get("/", (req, res) => {
 // GET /api/items
 app.get("/api/items", async (req, res) => {
   try {
-    const list = await items.find({}).sort({ _id: -1 }).toArray();
+    const { limit = 10, skip = 0 } = req.query;
+    const list = await items.find({})
+                            .skip(parseInt(skip))
+                            .limit(parseInt(limit))
+                            .sort({ _id: -1 })
+                            .toArray();
     res.json({ count: list.length, items: list });
   } catch (err) {
     console.error("GET /api/items error:", err.message);
@@ -108,14 +115,6 @@ app.post("/api/items", checkToken, async (req, res) => {
     console.error("POST /api/items error:", err.message);
     res.status(500).json({ error: "Failed to create item" });
   }
-});
-
-// GET /version
-app.get("/version", (req, res) => {
-  res.json({
-    version: "1.1",
-    updatedAt: "2026-01-25"
-  });
 });
 
 // PUT /api/items/:id
