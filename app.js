@@ -137,6 +137,38 @@ app.put("/api/items/:id", async (req, res) => {
   }
 });
 
+// PATCH /api/items/:id (Partial update)
+app.patch("/api/items/:id", async (req, res) => {
+  const { id } = req.params;
+  if (!ObjectId.isValid(id)) return res.status(400).json({ error: "Invalid id" });
+
+  try {
+    const { name, description } = req.body;
+
+    const update = {};
+    if (name !== undefined) {
+      if (typeof name !== "string") return res.status(400).json({ error: "name must be string" });
+      update.name = name.trim();
+    }
+    if (description !== undefined) {
+      if (typeof description !== "string") return res.status(400).json({ error: "description must be string" });
+      update.description = description.trim();
+    }
+
+    const result = await items.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: update },
+      { returnDocument: "after" }
+    );
+
+    if (!result.value) return res.status(404).json({ error: "Item not found" });
+    res.json(result.value);
+  } catch (err) {
+    console.error("PATCH /api/items/:id error:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // DELETE /api/items/:id
 app.delete("/api/items/:id", async (req, res) => {
   const { id } = req.params;
