@@ -1,4 +1,7 @@
 require("dotenv").config();
+const passwordSalt = process.env.PASSWORD_SALT;
+const mongoUri = process.env.MONGO_URI;
+const secretToken = process.env.MY_SECRET_TOKEN;
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ObjectId } = require("mongodb");
