@@ -180,8 +180,7 @@ app.patch("/api/items/:id", checkToken, async (req, res) => {
       { returnDocument: "after" }
     );
 
-    if (!result.value) return res.status(404).json({ error: "Item not found" });
-    res.json(result.value);
+    
   } catch (err) {
     console.error("PATCH /api/items/:id error:", err.message);
     res.status(500).json({ error: "Server error" });
