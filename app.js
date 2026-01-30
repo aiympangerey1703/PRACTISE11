@@ -7,7 +7,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Required env vars (Task 11)
+// Middleware для проверки токена
+const checkToken = (req, res, next) => {
+  const token = req.headers['authorization'];  // Получаем токен из заголовка
+
+  if (!token) {
+    return res.status(401).json({ error: 'Токен не предоставлен' });  // Если токен отсутствует, возвращаем 401
+  }
+
+  if (token !== 'my-secret-token') {  // Проверяем, совпадает ли токен с нужным значением
+    return res.status(403).json({ error: 'Forbidden: Неверный токен' });  // Если токен неверный, возвращаем 403
+  }
+
+  next();  // Если токен правильный, продолжаем выполнение
+};
+
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -16,7 +30,6 @@ if (!MONGO_URI) {
   process.exit(1);
 }
 
-// ✅ New database for this project (MongoDB creates it when you insert first doc)
 const DB_NAME = "shop";
 const COLLECTION = "items";
 
@@ -72,15 +85,15 @@ app.get("/api/items/:id", async (req, res) => {
 });
 
 // POST /api/items
-app.post("/api/items", async (req, res) => {
+app.post("/api/items", checkToken, async (req, res) => {
   try {
     const { name, description } = req.body;
 
     if (!name || typeof name !== "string") {
-      return res.status(400).json({ error: "name (string) is required" });
+      return res.status(400).json({ error: "'name' (string) is required" });
     }
     if (description !== undefined && typeof description !== "string") {
-      return res.status(400).json({ error: "description must be string" });
+      return res.status(400).json({ error: "'description' must be string" });
     }
 
     const doc = {
@@ -106,7 +119,7 @@ app.get("/version", (req, res) => {
 });
 
 // PUT /api/items/:id
-app.put("/api/items/:id", async (req, res) => {
+app.put("/api/items/:id", checkToken, async (req, res) => {
   const { id } = req.params;
   if (!ObjectId.isValid(id)) return res.status(400).json({ error: "Invalid id" });
 
@@ -115,11 +128,11 @@ app.put("/api/items/:id", async (req, res) => {
 
     const update = {};
     if (name !== undefined) {
-      if (typeof name !== "string") return res.status(400).json({ error: "name must be string" });
+      if (typeof name !== "string") return res.status(400).json({ error: "'name' must be string" });
       update.name = name.trim();
     }
     if (description !== undefined) {
-      if (typeof description !== "string") return res.status(400).json({ error: "description must be string" });
+      if (typeof description !== "string") return res.status(400).json({ error: "'description' must be string" });
       update.description = description.trim();
     }
 
@@ -137,8 +150,8 @@ app.put("/api/items/:id", async (req, res) => {
   }
 });
 
-// PATCH /api/items/:id (Partial update)
-app.patch("/api/items/:id", async (req, res) => {
+// PATCH /api/items/:id
+app.patch("/api/items/:id", checkToken, async (req, res) => {
   const { id } = req.params;
   if (!ObjectId.isValid(id)) return res.status(400).json({ error: "Invalid id" });
 
@@ -173,9 +186,8 @@ app.patch("/api/items/:id", async (req, res) => {
   }
 });
 
-
 // DELETE /api/items/:id
-app.delete("/api/items/:id", async (req, res) => {
+app.delete("/api/items/:id", checkToken, async (req, res) => {
   const { id } = req.params;
   if (!ObjectId.isValid(id)) return res.status(400).json({ error: "Invalid id" });
 
@@ -189,7 +201,7 @@ app.delete("/api/items/:id", async (req, res) => {
   }
 });
 
-// 404 JSON
+// 404 JSON for undefined routes
 app.use((req, res) => {
   res.status(404).json({ error: "API endpoint not found" });
 });
